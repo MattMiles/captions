@@ -1,3 +1,4 @@
 .vscode
 
 praw.ini
+client_secret.json
