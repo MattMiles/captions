@@ -1,3 +1,5 @@
+import re
+
 import google.oauth2.credentials
 
 from googleapiclient.discovery import build
@@ -14,5 +16,20 @@ def get_authenticated_service():
     credentials = flow.run_console()
     return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
+def get_caption_data(client, tlang, videoId, **kwargs):
+    res = client.captions().list(
+        part=kwargs.get('part', 'snippet'),
+        videoId=videoId,
+        **kwargs
+    ).execute()
+
+    for caption in res['items']:
+        if re.match(r'^{}(-.*)*$'.format(tlang), caption['snippet']['language']):
+            return caption
+
+    raise ValueError(f'No track found for {videoId} with the specified language {tlang}.')
+
 if __name__ == '__main__':
     client = get_authenticated_service()
+
+    caption_id = get_caption_data(client, 'en', 'CfW845LNObM')['id']
