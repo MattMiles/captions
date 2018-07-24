@@ -16,6 +16,12 @@ def get_authenticated_service():
     credentials = flow.run_console()
     return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
+def download_caption_track(client, caption_id, **kwargs):
+    return client.captions().download(
+        id=caption_id,
+        **kwargs
+    ).execute()
+
 def get_caption_data(client, tlang, videoId, **kwargs):
     res = client.captions().list(
         part=kwargs.get('part', 'snippet'),
@@ -33,3 +39,5 @@ if __name__ == '__main__':
     client = get_authenticated_service()
 
     caption_id = get_caption_data(client, 'en', 'CfW845LNObM')['id']
+
+    print(download_caption_track(client, caption_id))
