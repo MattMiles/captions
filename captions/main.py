@@ -2,6 +2,13 @@ import re
 import sys
 import praw
 
+# compatible YouTube URL formats:
+# https://www.youtube.com/watch?v=###########
+# https://youtu.be/###########
+YOUTUBE_PATTERN = re.compile(
+    r'^(https?:\/\/)?(((www\.|m\.)?youtube.com\/watch(\?v=(?P<id>.{11}))|(\?.+=.+))|((www\.)?youtu\.be\/(?P<shortened_id>.{11})(.+=.+)?))$'
+)
+
 def get_subreddits_from_config():
     with open('praw.ini') as config:
         try:
@@ -11,27 +18,29 @@ def get_subreddits_from_config():
             print('Error: missing subreddits in praw.ini. See README.md for more details.')
             sys.exit(1)
 
-def main():
+def is_youtube_url(url):
+    return re.match(YOUTUBE_PATTERN, url)
+
+def get_youtube_video_id(url_match):
+    return url_match.group('id') or url_match.group('shortened_id')
+
+def initialize_praw():
     reddit = praw.Reddit('captions-reddit', user_agent='reddit-captions-bot')
 
-    subreddits = get_subreddits_from_config()
-    subreddit = reddit.subreddit('+'.join(subreddits))
+    subreddits_from_config = get_subreddits_from_config()
+    subreddits = reddit.subreddit('+'.join(subreddits_from_config))
 
-    # compatible YouTube URL formats:
-    # https://www.youtube.com/watch?v=###########
-    # https://youtu.be/###########
-    youtube_pattern = re.compile(
-        r'^(https?:\/\/)?(((www\.|m\.)?youtube.com\/watch(\?v=(?P<id>.{11}))|(\?.+=.+))|((www\.)?youtu\.be\/(?P<shortened_id>.{11})(.+=.+)?))$'
-    )
+    return reddit, subreddits
 
-    for submission in subreddit.stream.submissions():
+if __name__ == '__main__':
+    reddit, subreddits = initialize_praw()
+
+    for submission in subreddits.stream.submissions():
         try:
-            match = re.match(youtube_pattern, submission.url)
+            match = is_youtube_url(submission.url)
 
             if match:
-                video_id = match.group('id') or match.group('shortened_id')
+                video_id = get_youtube_video_id(match)
                 
         except praw.exceptions.PRAWException as e:
             print(e)
-
-main()
