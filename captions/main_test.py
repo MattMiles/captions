@@ -26,5 +26,11 @@ class TestMain(unittest.TestCase):
         self.assertTrue(is_youtube_url('http://youtu.be/mW6hFttt_KE&t=23'))
         self.assertTrue(is_youtube_url('youtu.be/mW6hFttt_KE&t=23'))
 
+        # invalid URLs
+        self.assertFalse(is_youtube_url('https://youtube.com'))
+        self.assertFalse(is_youtube_url('https://youtube.com/watch'))
+        self.assertFalse(is_youtube_url('https://google.com'))
+        
 if __name__ == '__main__':
     unittest.main()
+    
